@@ -1,0 +1,45 @@
+name: 'MCP Security Audit'
+description: 'Scan MCP servers, AI agent skills, and plugins for 68+ malicious patterns'
+author: 'eltociear'
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  path:
+    description: 'File or directory to scan'
+    required: false
+    default: '.'
+  severity:
+    description: 'Minimum severity to report (critical, high, medium, low)'
+    required: false
+    default: 'low'
+  fail-on:
+    description: 'Fail the check if risk level meets or exceeds this (SAFE, LOW, MEDIUM, HIGH, CRITICAL)'
+    required: false
+    default: 'HIGH'
+  sarif:
+    description: 'Output SARIF file path for GitHub Code Scanning'
+    required: false
+    default: ''
+
+outputs:
+  risk-score:
+    description: 'Overall risk score (0-100)'
+  risk-level:
+    description: 'Risk level (SAFE, LOW, MEDIUM, HIGH, CRITICAL)'
+  findings:
+    description: 'Number of findings'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run MCP Security Audit
+      shell: bash
+      run: |
+        python3 "${{ github.action_path }}/cli.py" \
+          --path "${{ inputs.path }}" \
+          --severity "${{ inputs.severity }}" \
+          --fail-on "${{ inputs.fail-on }}" \
+          ${{ inputs.sarif && format('--sarif "{0}"', inputs.sarif) || '' }} \
+          --github-output

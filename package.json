@@ -1,0 +1,34 @@
+{
+  "name": "mcp-security-audit",
+  "version": "1.0.0",
+  "description": "Scan MCP servers, AI agent skills, and plugins for 68+ malicious patterns. CLI + GitHub Action + MCP Server.",
+  "bin": {
+    "mcp-audit": "./bin/mcp-audit.js"
+  },
+  "keywords": [
+    "mcp",
+    "security",
+    "audit",
+    "ai-agent",
+    "claude",
+    "cursor",
+    "codex",
+    "malware-detection",
+    "prompt-injection",
+    "credential-exfiltration"
+  ],
+  "author": "eltociear",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eltociear/mcp-security-audit"
+  },
+  "homepage": "https://github.com/eltociear/mcp-security-audit",
+  "files": [
+    "bin/",
+    "scanner.py",
+    "cli.py",
+    "action.yml",
+    "README.md"
+  ]
+}
