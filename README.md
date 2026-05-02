@@ -1,4 +1,4 @@
-# mcp-security-audit
+# skill-audit-mcp
 
 Scan MCP servers, AI agent skills, and plugins for **68+ malicious patterns** including credential exfiltration, prompt injection, code execution, seed phrase harvesting, and more.
 
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: eltociear/mcp-security-audit@v1
+      - uses: eltociear/skill-audit-mcp@v1
         with:
           path: '.'
           fail-on: 'HIGH'
@@ -26,7 +26,7 @@ jobs:
 With SARIF upload (shows findings in GitHub Security tab):
 
 ```yaml
-      - uses: eltociear/mcp-security-audit@v1
+      - uses: eltociear/skill-audit-mcp@v1
         with:
           path: '.'
           sarif: 'results.sarif'
@@ -40,25 +40,25 @@ With SARIF upload (shows findings in GitHub Security tab):
 
 ```bash
 # Scan a file
-npx mcp-security-audit --path ./server.py
+npx @eltociear/skill-audit-mcp --path ./server.py
 
 # Scan a directory
-npx mcp-security-audit --path ./mcp-servers/
+npx @eltociear/skill-audit-mcp --path ./mcp-servers/
 
 # JSON output
-npx mcp-security-audit --path . --json
+npx @eltociear/skill-audit-mcp --path . --json
 
 # SARIF output
-npx mcp-security-audit --path . --sarif results.sarif
+npx @eltociear/skill-audit-mcp --path . --sarif results.sarif
 
 # Fail if HIGH or CRITICAL findings
-npx mcp-security-audit --path . --fail-on HIGH
+npx @eltociear/skill-audit-mcp --path . --fail-on HIGH
 ```
 
 Or install globally:
 
 ```bash
-npm install -g mcp-security-audit
+npm install -g @eltociear/skill-audit-mcp
 mcp-audit --path ./server.py
 ```
 
@@ -68,7 +68,7 @@ Add to your MCP config:
 
 ```json
 {
-  "mcp-security-audit": {
+  "skill-audit-mcp": {
     "type": "stdio",
     "command": "python3",
     "args": ["path/to/scanner.py"]
