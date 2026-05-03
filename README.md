@@ -1,8 +1,13 @@
 # skill-audit-mcp
 
+[![Replicate](https://replicate.com/eltociear/skill-audit-mcp/badge)](https://replicate.com/eltociear/skill-audit-mcp)
+[![Glama MCP server](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp/badges/score.svg)](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp)
+
 Scan MCP servers, AI agent skills, and plugins for **68+ malicious patterns** including credential exfiltration, prompt injection, code execution, seed phrase harvesting, and more.
 
-Three ways to use:
+**Try it now without installing:** [Run on Replicate ↗](https://replicate.com/eltociear/skill-audit-mcp)
+
+Four ways to use:
 
 ## 1. GitHub Action (CI/CD)
 
