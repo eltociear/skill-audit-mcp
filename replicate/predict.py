@@ -18,7 +18,7 @@ import urllib.request
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
-        scanner_path = os.path.join(os.path.dirname(__file__), "..", "scanner.py")
+        scanner_path = os.path.join(os.path.dirname(__file__), "scanner.py")
         scanner_path = os.path.abspath(scanner_path)
         spec = importlib.util.spec_from_file_location("scanner", scanner_path)
         self.scanner = importlib.util.module_from_spec(spec)

