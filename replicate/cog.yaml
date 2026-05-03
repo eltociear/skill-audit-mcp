@@ -1,0 +1,6 @@
+build:
+  python_version: "3.11"
+  python_packages: []
+  system_packages: []
+
+predict: "predict.py:Predictor"
