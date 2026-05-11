@@ -1,0 +1,41 @@
+# Example workflow: drop this into your MCP server / skill repo at
+# .github/workflows/skill-audit.yml
+#
+# It runs skill-audit-mcp on every push and PR, uploads SARIF findings
+# to the GitHub Security tab, and fails CI on HIGH or CRITICAL findings.
+
+name: MCP Security Audit
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    # Weekly re-scan to catch newly added patterns
+    - cron: '0 6 * * 1'
+
+jobs:
+  audit:
+    name: skill-audit-mcp
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run skill-audit-mcp
+        uses: eltociear/skill-audit-mcp@v1
+        with:
+          path: '.'
+          severity: 'MEDIUM'
+          fail-on: 'HIGH'
+          sarif: 'skill-audit.sarif'
+
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: skill-audit.sarif
+          category: skill-audit-mcp
