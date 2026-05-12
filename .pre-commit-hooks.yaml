@@ -1,0 +1,13 @@
+- id: skill-audit-mcp
+  name: skill-audit-mcp
+  description: Static security scanner for MCP servers, AI agent skills, and plugins. 68 attack patterns across 4 severity levels (CRITICAL/HIGH/MEDIUM/LOW) — credential exfiltration, prompt injection, code execution, seed-phrase harvest, auth bypass, path traversal.
+  entry: python3 cli.py
+  language: python
+  language_version: python3
+  pass_filenames: false
+  args:
+    - "--path=."
+    - "--min-severity=MEDIUM"
+    - "--fail-on=HIGH"
+  types: [file]
+  files: \.(py|js|ts|mjs|json|md|yaml|yml|toml)$
