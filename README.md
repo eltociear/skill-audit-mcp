@@ -134,6 +134,21 @@ Then ask Claude: "Audit this MCP server for security issues"
 - 51-75: HIGH
 - 76-100: CRITICAL
 
+## Sister project — secrets-audit-mcp
+
+For **leaked credentials and API keys** (vs behavioral patterns covered here),
+see [secrets-audit-mcp](https://github.com/eltociear/secrets-audit-mcp) —
+32 provider rules (AWS / GCP / GitHub / Stripe / OpenAI / Anthropic / Slack /
+Discord / Telegram / npm / Docker / Web3 / private keys). Same zero-dep,
+single-file stdio MCP server design.
+
+| Layer | Server | Detects |
+|---|---|---|
+| Behaviors | `skill-audit-mcp` (this) | curl-pipe-sh, prompt injection, exfiltration (68 patterns) |
+| Secrets | `secrets-audit-mcp` | leaked keys/tokens/PEMs (32 rules) |
+
+Run both for full coverage.
+
 ## 4. Docker (offline, multi-arch)
 
 Zero-install scanner image at `ghcr.io/eltociear/skill-audit-mcp:v1` — `linux/amd64` + `linux/arm64`.
