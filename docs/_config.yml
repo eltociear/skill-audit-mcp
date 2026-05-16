@@ -1,0 +1,22 @@
+title: skill-audit-mcp
+description: Static security scanner for MCP servers, AI agent skills, and plugins.
+theme: jekyll-theme-cayman
+url: https://eltociear.github.io
+baseurl: /skill-audit-mcp
+show_downloads: false
+google_analytics:
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - CONTRIBUTING.md
+  - README.md
+  - LICENSE.md
+  - COPYING.md
+  - CODE_OF_CONDUCT.md
+  - CONTRIBUTING.md
+  - ISSUE_TEMPLATE.md
+  - PULL_REQUEST_TEMPLATE.md
