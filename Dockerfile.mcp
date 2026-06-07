@@ -1,0 +1,16 @@
+# MCP stdio server image (distinct from the CLI image built by Dockerfile).
+# Published to the official MCP Registry as io.github.eltociear/skill-audit-mcp.
+FROM python:3.12-alpine
+
+LABEL org.opencontainers.image.title="skill-audit-mcp"
+LABEL org.opencontainers.image.description="MCP server: static security scanner for MCP servers, agent skills, and plugins."
+LABEL org.opencontainers.image.source="https://github.com/eltociear/skill-audit-mcp"
+LABEL org.opencontainers.image.licenses="MIT"
+# Required by the official MCP Registry to verify OCI image ownership (must match server.json name).
+LABEL io.modelcontextprotocol.server.name="io.github.eltociear/skill-audit-mcp"
+
+WORKDIR /app
+COPY server.py /app/server.py
+
+# Runs the JSON-RPC MCP server over stdio.
+ENTRYPOINT ["python3", "/app/server.py"]

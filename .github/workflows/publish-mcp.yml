@@ -1,0 +1,51 @@
+name: Publish to MCP Registry
+
+# Builds the MCP stdio server image (Dockerfile.mcp, with the registry ownership
+# label) to ghcr, then publishes to the official MCP Registry via GitHub Actions
+# OIDC (no browser, no stored secret). Separate from the CLI image.
+on:
+  push:
+    tags: ["mcp-v*"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # push image to ghcr.io
+      id-token: write   # GitHub OIDC for mcp-publisher
+    env:
+      VERSION: "1.0.2"
+      IMAGE: ghcr.io/${{ github.repository_owner }}/skill-audit-mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push MCP server image (carries server.name label)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.mcp
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:mcp-${{ env.VERSION }}
+            ${{ env.IMAGE }}:mcp-latest
+
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+          mcp-publisher --version
+
+      - name: Authenticate (GitHub OIDC) and publish
+        run: |
+          mcp-publisher login github-oidc
+          mcp-publisher publish

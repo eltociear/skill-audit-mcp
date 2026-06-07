@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.eltociear/skill-audit-mcp",
+  "description": "MCP server: static security scanner for MCP servers, agent skills & plugins. 68 attack patterns.",
+  "repository": {
+    "url": "https://github.com/eltociear/skill-audit-mcp",
+    "source": "github"
+  },
+  "version": "1.0.2",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/eltociear/skill-audit-mcp:mcp-1.0.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
