@@ -1,0 +1,10 @@
+runtime: "container"
+build:
+  dockerfile: "Dockerfile.mcp"
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction: |-
+    (config) => ({ command: "python3", args: ["server.py"] })
