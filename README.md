@@ -1,5 +1,7 @@
 # skill-audit-mcp
 
+[![smithery badge](https://smithery.ai/badge/eltociear/skill-audit-mcp)](https://smithery.ai/server/eltociear/skill-audit-mcp) [![MCP Registry](https://img.shields.io/badge/MCP_Registry-active-2da44e)](https://registry.modelcontextprotocol.io)
+
 > **Static security scanner for MCP servers, AI agent skills, and plugins.** 68 attack patterns across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
 
 [![Glama MCP server](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp/badges/score.svg)](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp)
