@@ -249,3 +249,7 @@ Maintained by the same author — paid services on Polar (Stripe checkout):
 - **[Pro Audit Stack — $20/mo](https://buy.polar.sh/polar_cl_C37THjfoFMdOnu6xc1TnMIezYNuBbbivXbvFb3DCpZa)** — for teams running MCP servers in CI/CD: 50 hosted scans/month, Discord access, 24h SLA on vulnerability questions.
 
 Full catalog: [polar.sh/eltociear](https://polar.sh/eltociear)
+
+### Also live: clean-read ($0.005 / call)
+
+Same operator, same x402 rails: **[clean-read](https://eltociear-skill-audit.hf.space/read)** turns any URL into clean Markdown for AI agents — fetches the page, strips nav/ads/boilerplate (trafilatura), returns the main content with title and word count. `POST https://eltociear-skill-audit.hf.space/read` — $0.005 USDC on Base, no signup.
