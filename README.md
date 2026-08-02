@@ -240,6 +240,8 @@ MIT
 
 This MCP server is **free**. For server-side / batch / no-install use, the same scanner is a pay-per-call **x402** HTTP API: `POST https://eltociear-skill-audit.hf.space/audit` ($0.01 USDC on Base) and `/audit/url` ($0.03). In the official MCP Registry as `io.github.eltociear/skill-audit-mcp`.
 
+Also hosted on the **[Apify Store](https://apify.com/eltociear/mcp-server-security-scanner)** (Repo Security Scanner) — no install, scan a whole GitHub org or repo list, pay per repo.
+
 ## Professional audit services
 
 Maintained by the same author — paid services on Polar (Stripe checkout):
