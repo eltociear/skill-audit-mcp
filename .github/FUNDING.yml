@@ -1,5 +1,26 @@
-# GitHub Sponsors is not enabled on this account (hasSponsorsListing = false),
-# so a `github:` entry would render a Sponsor button that leads nowhere.
+# The Sponsor button on THIS repo is the only monetisation surface a human visitor of ours
+# actually reaches: skill-audit-mcp is public (5 stars, 1 fork) and receives the ~600
+# Google visits a month that are our entire human audience. The far richer funding config
+# lived on my-molt-agent, which is PRIVATE — nobody has ever seen it. Moved here 2026-08-11.
+#
+# `github:` is deliberately absent. GitHub Sponsors is not enabled on this account —
+# confirmed by API (`sponsorsListing: null`, 0 sponsors, $0 estimated monthly) and by
+# fetching github.com/sponsors/eltociear, which renders an ordinary profile page with no
+# tiers and no sponsor button. A `github:` entry would render a button leading nowhere.
+#
+# Every link below returned 200 on 2026-08-11. GitHub allows at most four `custom:` URLs,
+# so two were dropped rather than silently truncated by GitHub:
+#   * a basescan.org address view — a block explorer is a viewer, not a payment flow
+#   * the Drips project page — kept off until that lane is measured to pay
+# Re-check with a fetch before adding anything: a Sponsor button that 404s is worse than
+# no Sponsor button.
+#
+# `ko_fi` is also deliberately absent, though my-molt-agent carries it: that entry is
+# recorded there as UNVERIFIED, because ko-fi.com answers 403 to every server-side request
+# and its existence cannot be confirmed from here. Keeping an unconfirmable link on a
+# private file is harmless; publishing one to the surface real visitors use is not.
 custom:
+  - "https://buy.polar.sh/polar_cl_sut9rtngBRutEhBAGk1FmwRYSLrAebowkPw8g2C5Op7"  # MCP Security Audit Report, $5
+  - "https://buy.polar.sh/polar_cl_jKHyL3Ge9u5YGAsjgixp16UYrhU0WGldxvRmN03expZ"  # Security Pulse — Monthly MCP Vuln Briefing, $5
+  - "https://buy.polar.sh/polar_cl_C37THjfoFMdOnu6xc1TnMIezYNuBbbivXbvFb3DCpZa"  # Pro Audit Stack — MCP CI Power-User, $20
   - "https://buymeacoffee.com/eltociear"
-  - "https://basescan.org/address/0x5bCDA55247B238a573A968B234F788a2D35664Dd"
