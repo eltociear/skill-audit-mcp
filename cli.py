@@ -19,7 +19,7 @@ import glob as globmod
 
 # Import scanner engine (same directory)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from scanner import scan, PATTERNS, SEVERITY_SCORE
+from scanner import scan, PATTERNS, SEVERITY_SCORE, file_context, VERSION
 
 SCAN_EXTENSIONS = {
     '.py', '.js', '.ts', '.mjs', '.cjs', '.jsx', '.tsx',
@@ -42,6 +42,10 @@ def scan_file(filepath):
 
     result = scan(content)
     result['file'] = filepath
+    # What a finding MEANS depends on where it lives. A piped installer in a README and a
+    # shell-out in a test harness are expected there and are not defects in the software being
+    # scanned. Labelled, never dropped — the caller decides what to do with a documentation hit.
+    result['file_context'] = file_context(filepath)
     return result
 
 
@@ -94,10 +98,17 @@ def to_sarif(results):
                     },
                 })
 
+            ctx = result.get('file_context', 'production')
+            level = 'error' if finding['severity'] in ('CRITICAL', 'HIGH') else 'warning'
+            if ctx != 'production':
+                level = 'note'
             sarif_results.append({
                 'ruleId': rule_id,
-                'level': 'error' if finding['severity'] in ('CRITICAL', 'HIGH') else 'warning',
-                'message': {'text': f"{finding['name']}: {finding.get('matched', '')[:80]}"},
+                'level': level,
+                'properties': {'fileContext': ctx},
+                'message': {'text': f"{finding['name']}: {finding.get('matched', '')[:80]}"
+                                    + ('' if ctx == 'production'
+                                       else f" [in {ctx}, not a defect in the software]")},
                 'locations': [{
                     'physicalLocation': {
                         'artifactLocation': {'uri': result.get('file', 'unknown')},
@@ -113,8 +124,8 @@ def to_sarif(results):
             'tool': {
                 'driver': {
                     'name': 'mcp-security-audit',
-                    'version': '1.0.0',
-                    'informationUri': 'https://github.com/eltociear/mcp-security-audit',
+                    'version': VERSION,
+                    'informationUri': 'https://github.com/eltociear/skill-audit-mcp',
                     'rules': rules,
                 }
             },
@@ -123,7 +134,23 @@ def to_sarif(results):
     }
 
 
+def _make_stdout_printable():
+    """Do not crash on a console that cannot encode the output.
+
+    The report contained an em dash. On a Windows console running a legacy code page - cp932 on
+    a Japanese install, cp936, cp1252 - printing it raised UnicodeEncodeError and the whole scan
+    died AFTER doing all the work, with a traceback instead of a report. A security tool that
+    cannot print its findings on the operator's own machine has not found anything.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding='utf-8', errors='backslashreplace')
+        except Exception:
+            pass  # Python 3.6, or a stream that is not reconfigurable - fall through to ASCII
+
+
 def main():
+    _make_stdout_printable()
     parser = argparse.ArgumentParser(description='MCP Security Audit — scan for malicious patterns')
     parser.add_argument('--path', default='.', help='File or directory to scan')
     parser.add_argument('--severity', default='low', help='Minimum severity (critical/high/medium/low)')
@@ -131,6 +158,9 @@ def main():
     parser.add_argument('--sarif', default='', help='Write SARIF output to file')
     parser.add_argument('--json', action='store_true', help='JSON output')
     parser.add_argument('--github-output', action='store_true', help='Write GitHub Actions outputs')
+    parser.add_argument('--include-nonproduction', action='store_true',
+                        help='Let findings in test and documentation files fail the build '
+                             'too (default: only production code can fail it)')
     args = parser.parse_args()
 
     target = args.path
@@ -144,11 +174,18 @@ def main():
         print(f"Error: {target} not found", file=sys.stderr)
         sys.exit(1)
 
-    # Aggregate
+    # Aggregate. The headline and the exit code follow PRODUCTION code by default: this runs in
+    # CI via action.yml, and failing someone's build over a piped installer in their README or
+    # a shell-out in their test harness is the costliest false positive this tool can produce.
+    # Those findings are still printed and still written to SARIF - they are simply not fatal.
+    gating = results if args.include_nonproduction else [
+        r for r in results if r.get('file_context', 'production') == 'production']
     total_findings = sum(r['total_findings'] for r in results)
-    max_score = max((r['risk_score'] for r in results), default=0)
+    gating_findings = sum(r['total_findings'] for r in gating)
+    nonprod_findings = total_findings - gating_findings
+    max_score = max((r['risk_score'] for r in gating), default=0)
     max_level = 'SAFE'
-    for r in results:
+    for r in gating:
         if SEVERITY_ORDER.get(r['risk_level'], 4) < SEVERITY_ORDER.get(max_level, 4):
             max_level = r['risk_level']
 
@@ -167,13 +204,20 @@ def main():
         print(f"{'='*60}")
         print(f"  Target: {target}")
         print(f"  Risk Score: {max_score}/100 ({max_level})")
-        print(f"  Findings: {total_findings} across {len(results)} files")
+        scope = 'code' if args.include_nonproduction else 'production code'
+        print(f"  Findings: {gating_findings} in {scope} across {len(gating)} files")
+        if nonprod_findings:
+            print(f"  Plus {nonprod_findings} in test or documentation files, listed")
+            print('  below and tagged. Not defects in the software; they do not affect')
+            print('  the exit code. Pass --include-nonproduction to let them fail it.')
         print(f"{'='*60}\n")
 
         for result in sorted(results, key=lambda r: -r['risk_score']):
             if result['total_findings'] == 0:
                 continue
-            print(f"  {result['file']} — {result['risk_level']} ({result['risk_score']}/100)")
+            ctx = result.get('file_context', 'production')
+            tag = '' if ctx == 'production' else f'  <{ctx}>'
+            print(f"  {result['file']} — {result['risk_level']} ({result['risk_score']}/100){tag}")
             for f in result['findings'][:10]:
                 print(f"    [{f['severity']}] {f['name']}: {f.get('matched', '')[:60]}")
                 print(f"      Line {f['line']}: {f.get('context', '')[:80]}")
@@ -193,7 +237,8 @@ def main():
             with open(output_file, 'a') as f:
                 f.write(f"risk-score={max_score}\n")
                 f.write(f"risk-level={max_level}\n")
-                f.write(f"findings={total_findings}\n")
+                f.write(f"findings={gating_findings}\n")
+                f.write(f"findings-nonproduction={nonprod_findings}\n")
 
     # Fail check
     fail_level = args.fail_on.upper()

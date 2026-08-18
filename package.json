@@ -1,6 +1,6 @@
 {
   "name": "@eltociear/skill-audit-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scan MCP servers, AI agent skills, and plugins for 68+ malicious patterns. CLI + GitHub Action + MCP Server.",
   "bin": {
     "mcp-audit": "./bin/mcp-audit.js"

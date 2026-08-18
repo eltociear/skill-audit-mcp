@@ -12,7 +12,7 @@ Usage:
     "skill-audit": {
       "type": "stdio",
       "command": "python3",
-      "args": ["mcp_servers/skill-audit/server.py"]
+      "args": ["server.py"]
     }
   }
 """
@@ -22,7 +22,7 @@ import json
 import re
 import os
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_NAME = "skill-audit"
 
@@ -36,24 +36,31 @@ PATTERNS = {
             "id": "download_execute",
             "name": "Download & Execute",
             "desc": "Downloads external file and executes/installs it",
+            # Precision: bare `curl -o`/`wget -O` (download only, no execution) removed —
+            # ubiquitous in install docs. Kept: forms that actually EXECUTE what they fetch.
             "regexes": [
-                r"curl\s+[^\s]+\s*\|\s*(?:sh|bash|python|node)",
-                r"curl\s+-[a-zA-Z]*o\s+",
-                r"wget\s+-[a-zA-Z]*O\s+",
+                # Flags between the command and the pipe are the norm, not the exception:
+                # `curl -fsSL https://get.docker.com | sudo sh` is the canonical form. The
+                # earlier pattern allowed exactly ONE token between curl and the pipe and so
+                # missed 6 of 8 real installer shapes, that one included. Measured, not guessed.
+                r"curl\b[^|;\r\n]{0,300}\|\s*(?:sudo(?:\s+-\S+)*\s+)?(?:sh|bash|zsh|dash|ksh|python3?|node|perl|ruby)\b(?!\s+-[mc]\b)",
+                r"wget\b[^|;\r\n]{0,300}\|\s*(?:sudo(?:\s+-\S+)*\s+)?(?:sh|bash|zsh|dash|ksh|python3?|node|perl|ruby)\b(?!\s+-[mc]\b)",
                 r"wget\s+[^\s]+\s*&&\s*(?:chmod|bash|sh|python)",
-                r"eval\s*\(\s*(?:fetch|require|import)",
-                r"(?:sh|bash|python|node)\s*<\s*\(",
-                r"curl\b.*\binstall\b",
+                r"eval\s*\(\s*(?:fetch|require|import|atob)",
+                r"(?:sh|bash|python|node)\s*<\s*\(\s*curl",
             ],
         },
         {
             "id": "credential_exfil",
             "name": "Credential Exfiltration",
             "desc": "Sends credentials/keys to external service",
+            # Precision: require BOTH a credential noun AND an explicit external
+            # destination (URL / webhook / email / bare domain) near a send verb, so a
+            # benign sentence like "send the XSRF header" no longer trips it.
             "regexes": [
-                r"(?:send|post|upload|transmit|forward)\b.*\b(?:api[_-]?key|token|password|secret|credential|private[_-]?key)\b.*\b(?:to|via|through|at)\b",
-                r"(?:api[_-]?key|token|password|secret|private[_-]?key)\b.*\b(?:send|post|upload|transmit|forward)\b",
-                r"exfiltrat",
+                r"(?:send|post|upload|transmit|forward|leak|exfiltrat)\w*\b.{0,60}?\b(?:api[_-]?key|access[_-]?token|auth[_-]?token|password|secret|credential|private[_-]?key|seed|mnemonic)\b.{0,60}?(?:https?://|wss?://|@[\w.-]+|webhook|discord\.com/api|t\.me/|[a-z0-9-]+\.(?:com|net|io|xyz|ru|cn|sh|dev)\b)",
+                r"\b(?:api[_-]?key|access[_-]?token|password|secret|private[_-]?key|mnemonic|seed\s+phrase)\b.{0,60}?\b(?:send|post|upload|transmit|forward|leak|exfiltrat)\w*\b.{0,60}?https?://",
+                r"exfiltrat\w*\b.{0,40}(?:key|token|secret|credential|password)",
             ],
         },
         {
@@ -82,9 +89,13 @@ PATTERNS = {
             "id": "seed_phrase_harvest",
             "name": "Seed Phrase / Private Key Harvest",
             "desc": "Extracts wallet seed phrases, mnemonics, or private keys",
+            # Precision: require an ownership word (your / the user's) so benign code like
+            # `inputSchema: { properties … "private"… }` no longer trips it. Wallet seed/
+            # mnemonic terms are specific enough to keep without ownership.
             "regexes": [
-                r"(?:send|share|provide|enter|input|paste|type|give)\b.*\b(?:seed\s+phrase|mnemonic|recovery\s+phrase|private\s+key|secret\s+key)",
-                r"(?:seed\s+phrase|mnemonic|recovery\s+phrase|private\s+key)\b.*\b(?:send|share|provide|post|upload)",
+                r"(?:send|share|provide|enter|paste|type|give|reveal)\b.{0,40}\b(?:your|the\s+user'?s?)\b.{0,25}(?:seed\s+phrase|mnemonic|recovery\s+phrase|private\s+key|secret\s+key)",
+                r"(?:seed\s+phrase|mnemonic|recovery\s+phrase)\b.{0,40}\b(?:send|share|provide|post|upload|paste|reveal)\b",
+                r"\b(?:your|user'?s?)\s+(?:wallet\s+)?(?:seed\s+phrase|mnemonic|private\s+key)\b.{0,30}(?:https?://|@|paste|enter|share)",
             ],
         },
     ],
@@ -115,25 +126,34 @@ PATTERNS = {
             "id": "code_execution",
             "name": "Arbitrary Code Execution",
             "desc": "Executes arbitrary or dynamically-loaded code",
+            # Precision: these exec primitives are normal in ordinary source. They are
+            # only scored HIGH when the SAME line also carries a dynamic-input signal
+            # (see DYNAMIC_INPUT + scan()); otherwise they are reported as info context.
+            # npx/pip/npm-install removed entirely — packaging, not code execution.
             "regexes": [
                 r"\beval\s*\(",
                 r"\bexec\s*\(",
                 r"subprocess\.\w+\(",
                 r"os\.system\s*\(",
-                r"npm\s+install\s+-g\s+",
-                r"pip3?\s+install\s+(?!-r\b)\S",
-                r"npx\s+\S+",
+                r"child_process",
+                r"pickle\.loads?\s*\(",
+                r"yaml\.load\s*\((?!.*Loader\s*=\s*yaml\.SafeLoader)",
             ],
         },
         {
             "id": "auth_bypass",
             "name": "Security Bypass",
             "desc": "Bypasses authentication or security mechanisms",
+            # Precision: dropped bare "disable auth" — it matched documented dev config
+            # toggles (e.g. `SOMA_MCP_NO_AUTH … Disable auth for loopback development`),
+            # which are features, not attacks. Kept imperative bypass + code-level flags.
             "regexes": [
-                r"(?:bypass|skip|ignore|disable|override)\s+(?:auth|security|verification|validation|check|hook)",
+                r"(?:bypass|circumvent|defeat|turn\s+off)\s+(?:the\s+)?(?:auth\w*|security|verification|validation)",
                 r"--no-verify\b",
                 r"--insecure\b",
-                r"verify\s*=\s*False",
+                r"verify\s*=\s*False\b",
+                r"ssl[_-]?verify\s*[:=]\s*(?:false|0|none)",
+                r"rejectUnauthorized\s*:\s*false",
             ],
         },
         {
@@ -144,6 +164,18 @@ PATTERNS = {
                 r"your\s+(?:PGP|GPG)\s+key\s+is\s+your\s+identity",
                 r"(?:set|change|update)\s+.*\b(?:display\s+name|username|identity)\b",
                 r"register\s+(?:as|with)\s+(?:your|this)\s+(?:name|identity)",
+            ],
+        },
+        {
+            "id": "prompt_injection",
+            "name": "Prompt Injection Markers",
+            "desc": "Contains patterns commonly used in prompt injection",
+            # High-precision, definitive injection phrasing → scored HIGH.
+            "regexes": [
+                r"(?:ignore|forget|disregard)\s+(?:all\s+)?(?:previous|prior|above)\s+(?:instructions|rules|guidelines)",
+                r"you\s+are\s+now\s+(?:a\s+)?(?:different|new|my)",
+                r"system\s*:\s*you\s+(?:are|must|should|will)",
+                r"<\s*(?:system|admin|root)\s*>\s*you",
             ],
         },
     ],
@@ -169,8 +201,8 @@ PATTERNS = {
             "id": "privilege_escalation",
             "name": "Privilege Escalation",
             "desc": "Requests elevated system permissions",
+            # bare `sudo` removed — ubiquitous in install docs, not a signal by itself.
             "regexes": [
-                r"\bsudo\b",
                 r"chmod\s+[0-7]*7[0-7]*\s",
                 r"(?:request|need|require|grant)\s+(?:full|complete|admin|root|elevated)\s+(?:access|permission|privilege)",
             ],
@@ -179,24 +211,13 @@ PATTERNS = {
             "id": "obfuscation",
             "name": "Content Obfuscation",
             "desc": "Contains obfuscated or encoded payloads",
+            # base64/atob/btoa words removed — common in legit encoding code. Kept: long
+            # hex/unicode escape blobs and String.fromCharCode, which are real obfuscation.
             "regexes": [
-                r"base64\s+(?:decode|encode|--decode|-d)\b",
-                r"\batob\s*\(",
-                r"\bbtoa\s*\(",
-                r"(?:\\x[0-9a-fA-F]{2}){4,}",
-                r"(?:\\u[0-9a-fA-F]{4}){4,}",
-                r"String\.fromCharCode\s*\(",
-            ],
-        },
-        {
-            "id": "prompt_injection",
-            "name": "Prompt Injection Markers",
-            "desc": "Contains patterns commonly used in prompt injection",
-            "regexes": [
-                r"(?:ignore|forget|disregard)\s+(?:all\s+)?(?:previous|prior|above)\s+(?:instructions|rules|guidelines)",
-                r"you\s+are\s+now\s+(?:a\s+)?(?:different|new|my)",
-                r"system\s*:\s*you\s+(?:are|must|should|will)",
-                r"<\s*(?:system|admin|root)\s*>",
+                r"(?:\\x[0-9a-fA-F]{2}){6,}",
+                r"(?:\\u[0-9a-fA-F]{4}){6,}",
+                r"String\.fromCharCode\s*\((?:\s*\d+\s*,){4,}",
+                r"eval\s*\(\s*(?:atob|Buffer\.from|base64)",
             ],
         },
     ],
@@ -223,6 +244,33 @@ PATTERNS = {
 
 SEVERITY_SCORE = {"critical": 25, "high": 15, "medium": 8, "low": 3}
 
+# ── Precision layer (added 2026-07-26) ────────────────────────────────────────
+# The pattern set was tuned for natural-language skill manifests; run against real
+# source it over-flagged (a benign file could hit 200+ external-URL "findings" and
+# score CRITICAL). These pattern ids are context, not risk: they are still reported,
+# but under `info` (score 0) so they never inflate the risk score or the CRIT/HIGH/
+# MED/LOW counts. Measured on 10 reputable repos: external_urls alone was 249/260
+# false positives.
+INFO_IDS = {
+    "external_urls", "filesystem_broad", "unknown_api",
+    "external_download", "data_collection",
+    # skill/plugin install is the NORMAL use case for MCP servers/agent skills — legit
+    # "claude plugin install", "installs to your skills directory" docs tripped it on
+    # every real plugin repo. The genuinely-malicious surreptitious self-install is caught
+    # by download_execute + sensitive_dir_write instead. Context, not risk.
+    "skill_install",
+}
+# code_execution primitives (eval/exec/subprocess/os.system/…) are only a real HIGH
+# finding when the same line also carries a dynamic-input source; a literal call is
+# ordinary code and demoted to info.
+DYNAMIC_INPUT = re.compile(
+    r"input\s*\(|\bargv\b|\bstdin\b|request\.|req\.|params|os\.environ|getenv|"
+    r"\bfetch\b|urlopen|requests\.(?:get|post)|\.read\(\)|user[_-]?input|"
+    r"\bf[\"']|\.format\s*\(|%\s*[\(\w]|\+\s*\w",
+    re.IGNORECASE,
+)
+CODE_EXEC_ID = "code_execution"
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Scanner Engine
@@ -231,6 +279,7 @@ SEVERITY_SCORE = {"critical": 25, "high": 15, "medium": 8, "low": 3}
 def scan(content):
     """Scan content for malicious patterns. Returns audit result dict."""
     findings = []
+    info = []
     lines = content.split("\n")
     seen = set()
 
@@ -247,7 +296,7 @@ def scan(content):
                         if key in seen:
                             continue
                         seen.add(key)
-                        findings.append({
+                        item = {
                             "severity": severity.upper(),
                             "id": pg["id"],
                             "name": pg["name"],
@@ -255,9 +304,20 @@ def scan(content):
                             "line": line_num,
                             "matched": match.group(0)[:120],
                             "context": line.strip()[:200],
-                        })
+                        }
+                        # Precision routing: informational patterns, and code-exec
+                        # primitives without a dynamic-input signal on the line, are
+                        # context (score 0) not scored findings.
+                        is_info = pg["id"] in INFO_IDS
+                        if pg["id"] == CODE_EXEC_ID and not DYNAMIC_INPUT.search(line):
+                            is_info = True
+                        if is_info:
+                            item["severity"] = "INFO"
+                            info.append(item)
+                        else:
+                            findings.append(item)
 
-    # Score
+    # Score (info items contribute 0 and are reported separately)
     total = 0
     counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
     for f in findings:
@@ -266,13 +326,17 @@ def scan(content):
         counts[f["severity"]] += 1
     total = min(total, 100)
 
-    if total >= 76:
+    # Level is driven by the HIGHEST-severity real finding present (one credential-exfil
+    # or pipe-to-shell is CRITICAL regardless of count), with risk_score as magnitude.
+    # This replaces the additive-threshold scheme that only worked because benign noise
+    # used to inflate every score.
+    if counts["CRITICAL"]:
         level = "CRITICAL"
-    elif total >= 51:
+    elif counts["HIGH"]:
         level = "HIGH"
-    elif total >= 26:
+    elif counts["MEDIUM"]:
         level = "MEDIUM"
-    elif total >= 11:
+    elif counts["LOW"]:
         level = "LOW"
     else:
         level = "SAFE"
@@ -285,12 +349,15 @@ def scan(content):
         if counts[s]:
             parts.append("%d %s" % (counts[s], s))
 
+    info.sort(key=lambda f: f["line"])
     return {
         "risk_score": total,
         "risk_level": level,
         "findings": findings,
+        "info": info,
         "summary": ", ".join(parts) if parts else "No issues found",
         "total_findings": len(findings),
+        "info_count": len(info),
     }
 
 
@@ -360,6 +427,36 @@ TOOLS = [
 ]
 
 
+# ── File context ──────────────────────────────────────────────────────────────
+# Added 2026-08-18. This is the PAID surface — buyers call it over MCP and x402 — and it was
+# reporting a `curl | sh` in an install doc and a `subprocess.run(` in a test harness at the
+# same weight as production code. Re-scanning 18 repositories that an earlier database of ours
+# had named as critically vulnerable, EVERY surviving finding was one of those two things.
+# That is how a healthy repository comes back reading like "RCE".
+#
+# apify-actor/src/scanner.py already skipped test and example paths and the behaviour never
+# propagated here. This labels rather than skips: a `curl | sh` in an install doc is a real
+# supply-chain concern for whoever follows it, it is simply not a flaw in the server.
+_CTX_TEST_MARKERS = ("/test/", "/tests/", "/spec/", "/__tests__/", "/fixtures/", "/e2e/",
+                     "/testdata/", "/examples/")
+_CTX_DOC_EXTS = {".md", ".txt", ".rst"}
+
+
+def file_context(path):
+    """production | test | documentation — from the path alone."""
+    low = "/" + path.replace(chr(92), "/").lstrip("/").lower()
+    base = low.rsplit("/", 1)[-1]
+    ext = os.path.splitext(base)[1]
+    if ext in _CTX_DOC_EXTS:
+        return "documentation"
+    if any(m in low for m in _CTX_TEST_MARKERS):
+        return "test"
+    if base.startswith("test_") or base.endswith(("_test.py", ".test.js", ".test.ts",
+                                                  ".spec.js", ".spec.ts")):
+        return "test"
+    return "production"
+
+
 def format_report(result):
     """Format scan result as human-readable text."""
     lines = []
@@ -421,7 +518,12 @@ def handle_audit_file(args):
 
 def handle_audit_directory(args):
     path = args.get("path", "")
-    exts = args.get("extensions", "md,txt,yaml,yml,json")
+    # 2026-08-18: the default was md,txt,yaml,yml,json — no code extension at all. Pointed at a
+    # repository containing os.system("mv ~/.ssh/keys.json /tmp/x") this returned "CLEAN", because
+    # it never opened a .py file. Aligned with scripts/scan_cli.py _DEFAULT_EXTS. Broadening the
+    # net is only safe because findings now carry file_context(), so the READMEs and test harnesses
+    # it now reaches are labelled instead of counted as server flaws.
+    exts = args.get("extensions", "md,txt,yaml,yml,json,py,js,ts,sh")
     if not path:
         return {"isError": True, "content": [{"type": "text", "text": "Error: path required"}]}
     path = os.path.expanduser(path)
@@ -432,11 +534,15 @@ def handle_audit_directory(args):
     results = []
     max_risk = 0
     total_findings = 0
+    nonprod_findings = 0
+    files_seen = 0
+    files_read = 0
 
     for root, dirs, files in os.walk(path):
         # Skip hidden dirs and node_modules
         dirs[:] = [d for d in dirs if not d.startswith(".") and d != "node_modules"]
         for fname in sorted(files):
+            files_seen += 1
             _, ext = os.path.splitext(fname)
             if ext.lower() not in ext_set:
                 continue
@@ -446,24 +552,47 @@ def handle_audit_directory(args):
                     content = f.read()
             except Exception:
                 continue
+            files_read += 1
             result = scan(content)
             if result["total_findings"] > 0:
+                ctx = file_context(os.path.relpath(fpath, path))
+                result["file_context"] = ctx
                 results.append((fpath, result))
-                max_risk = max(max_risk, result["risk_score"])
-                total_findings += result["total_findings"]
+                if ctx == "production":
+                    max_risk = max(max_risk, result["risk_score"])
+                    total_findings += result["total_findings"]
+                else:
+                    nonprod_findings += result["total_findings"]
 
     if not results:
-        report = "✅ CLEAN: No issues found in %s" % path
+        # A clean verdict has to say what it read. "CLEAN" over zero opened files is not a result,
+        # it is a failed scan wearing a result's clothes.
+        if files_read == 0:
+            report = ("⚠ NOT SCANNED: %s contains no files matching %s (%d file(s) present, all "
+                      "skipped). This is not a clean bill of health — widen `extensions` and re-run."
+                      % (path, exts, files_seen))
+        else:
+            report = ("✅ CLEAN: no findings in %d file(s) read from %s (extensions: %s; %d other "
+                      "file(s) skipped as out of scope)" % (files_read, path, exts,
+                                                            files_seen - files_read))
     else:
-        lines = ["DIRECTORY SCAN: %s" % path]
-        lines.append("Files with findings: %d | Total findings: %d | Max risk score: %d" % (
-            len(results), total_findings, max_risk))
+        lines = ["DIRECTORY SCAN: %s" % path,
+                 "Read %d of %d file(s) (extensions: %s)" % (files_read, files_seen, exts)]
+        prod = [r for r in results if r[1].get("file_context", "production") == "production"]
+        lines.append("Files with findings: %d | Findings IN THE SERVER: %d | Max risk score: %d" % (
+            len(prod), total_findings, max_risk))
+        if nonprod_findings:
+            lines.append("Plus %d finding(s) in documentation or test files, listed below and "
+                         "tagged. Those are not flaws in the server." % nonprod_findings)
         lines.append("")
         for fpath, result in sorted(results, key=lambda x: -x[1]["risk_score"]):
             rel = os.path.relpath(fpath, path)
             icons = {"CRITICAL": "☠", "HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢", "SAFE": "✅"}
             icon = icons.get(result["risk_level"], " ")
-            lines.append("  %s %s — %s (score %d)" % (icon, rel, result["risk_level"], result["risk_score"]))
+            ctx = result.get("file_context", "production")
+            tag = "" if ctx == "production" else "  <%s>" % ctx
+            lines.append("  %s %s — %s (score %d)%s" % (icon, rel, result["risk_level"],
+                                                        result["risk_score"], tag))
             for f in result["findings"][:3]:
                 lines.append("    [%s] %s (line %d)" % (f["severity"], f["name"], f["line"]))
             if len(result["findings"]) > 3:

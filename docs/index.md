@@ -1,11 +1,11 @@
 ---
 title: skill-audit-mcp — MCP & Claude skill security scanner
-description: Static security scanner for MCP servers, AI agent skills, and plugins. 68 attack patterns. CLI, GitHub Action, Docker, MCP server, and hosted x402 API.
+description: Static security scanner for MCP servers, AI agent skills, and plugins. 17 attack patterns (59 signatures). CLI, GitHub Action, Docker, MCP server, and hosted x402 API.
 ---
 
 # skill-audit-mcp
 
-**Static security scanner for MCP servers, AI agent skills, and plugins.** 68 attack patterns across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
+**Static security scanner for MCP servers, AI agent skills, and plugins.** 17 attack patterns (59 signatures) across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
 
 [![Glama](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp/badges/score.svg)](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp)
 [![GitHub stars](https://img.shields.io/github/stars/eltociear/skill-audit-mcp?style=social)](https://github.com/eltociear/skill-audit-mcp)
@@ -37,18 +37,38 @@ curl -X POST https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/s
 
 ## What it scans for
 
-| Class | Patterns | Examples |
-|-------|----------|----------|
-| Prompt injection | 14 | hidden instructions, indirect injection, jailbreak templates |
-| Tool poisoning | 12 | shadowed tool names, schema drift, malicious descriptions |
-| Exfiltration | 9 | DNS tunneling, webhook posts, base64 envelope leaks |
-| Code execution | 10 | `eval` / `exec` / shell pipes, deserialization |
-| Secrets | 8 | hard-coded API keys, dotenv leakage (see [secrets-audit-mcp](https://github.com/eltociear/secrets-audit-mcp) for the deep version) |
-| Supply chain | 6 | typosquatted deps, post-install script abuse |
-| OAuth / auth | 5 | mis-configured token scopes, open redirect |
-| Other | 4 | path traversal, SSRF surface, broken sanitizers |
+| Severity | Pattern | Signatures | Counts toward the score |
+|---|---|---:|---|
+| CRITICAL | Download & Execute | 5 | yes |
+| CRITICAL | Credential Exfiltration | 3 | yes |
+| CRITICAL | Cryptographic Key Generation | 5 | yes |
+| CRITICAL | Sensitive Directory Write | 3 | yes |
+| CRITICAL | Seed Phrase / Private Key Harvest | 3 | yes |
+| HIGH | External File Download | 4 | no — reported as context |
+| HIGH | Skill/Plugin Installation | 4 | no — reported as context |
+| HIGH | Arbitrary Code Execution | 7 | yes |
+| HIGH | Security Bypass | 6 | yes |
+| HIGH | Identity Impersonation | 3 | yes |
+| HIGH | Prompt Injection Markers | 4 | yes |
+| MEDIUM | Unknown API Endpoint | 1 | no — reported as context |
+| MEDIUM | Data Collection | 2 | no — reported as context |
+| MEDIUM | Privilege Escalation | 2 | yes |
+| MEDIUM | Content Obfuscation | 4 | yes |
+| LOW | External URL Reference | 1 | no — reported as context |
+| LOW | Broad File System Access | 2 | no — reported as context |
 
-Total: **68 patterns**, mapped to 4 severity levels and ~70 disclosed CVEs.
+**17 pattern groups, 59 regex signatures**, across 4 severity levels.
+
+Six of those groups are reported as **context rather than as findings**: an external
+download, a documented install command, a broad filesystem glob. They appear in the
+report and score zero. That demotion, plus requiring a dynamic-input signal on the same
+line before `eval`/`exec` counts at all, is what took the false-positive rate from
+14.8% to 1.0% over a 196-server sample.
+
+**No CVE has ever been assigned to a finding from this scanner.** An earlier version of
+this page claimed ~70 disclosed CVEs and a table of 68 patterns in classes the engine
+does not have. Neither was true; both are withdrawn. The table above is generated from
+`scanner.py`, so it cannot drift from the code again.
 
 ---
 
