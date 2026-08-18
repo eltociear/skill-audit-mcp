@@ -65,10 +65,14 @@ report and score zero. That demotion, plus requiring a dynamic-input signal on t
 line before `eval`/`exec` counts at all, is what took the false-positive rate from
 14.8% to 1.0% over a 196-server sample.
 
-**No CVE has ever been assigned to a finding from this scanner.** An earlier version of
-this page claimed ~70 disclosed CVEs and a table of 68 patterns in classes the engine
-does not have. Neither was true; both are withdrawn. The table above is generated from
-`scanner.py`, so it cannot drift from the code again.
+**No CVE has ever been assigned to a finding from this scanner.** An earlier version of this
+page advertised a count of disclosed CVEs, and a pattern table broken into classes the
+engine does not contain. Neither was true and both are withdrawn. The table above is
+generated from `scanner.py`, so it cannot drift from the code again.
+
+(The withdrawn figures are deliberately not restated here. Our own public-claims audit
+greps every published surface for them, and a correction that repeats the number it is
+retracting is indistinguishable from the claim.)
 
 ---
 
