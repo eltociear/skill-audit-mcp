@@ -26,8 +26,12 @@ SCAN_EXTENSIONS = {
     '.sh', '.bash', '.zsh',
     '.md', '.txt', '.yaml', '.yml', '.json', '.toml',
     '.rb', '.go', '.rs', '.java', '.kt', '.swift',
-    '.skill', '.prompt',
+    '.skill', '.prompt', '.mdc',
 }
+# Agent-instruction files with no extension, and the hidden directories agents read commands and
+# rules from. The walk skipped every hidden directory, so `.claude/commands/` was never opened.
+SCAN_FILENAMES = {'.cursorrules', '.windsurfrules'}
+AGENT_DIRS = {'.claude', '.cursor'}
 
 SEVERITY_ORDER = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'SAFE': 4}
 
@@ -56,12 +60,12 @@ def scan_directory(dirpath, min_severity='low'):
 
     for root, dirs, files in os.walk(dirpath):
         # Skip hidden dirs and common non-code dirs
-        dirs[:] = [d for d in dirs if not d.startswith('.') and d not in {
+        dirs[:] = [d for d in dirs if (not d.startswith('.') or d in AGENT_DIRS) and d not in {
             'node_modules', '__pycache__', '.git', 'venv', '.venv', 'dist', 'build'
         }]
         for fname in files:
             ext = os.path.splitext(fname)[1].lower()
-            if ext not in SCAN_EXTENSIONS:
+            if ext not in SCAN_EXTENSIONS and fname.lower() not in SCAN_FILENAMES:
                 continue
             filepath = os.path.join(root, fname)
             result = scan_file(filepath)

@@ -2,7 +2,7 @@
 
 [![smithery badge](https://smithery.ai/badge/eltociear/skill-audit-mcp)](https://smithery.ai/server/eltociear/skill-audit-mcp) [![MCP Registry](https://img.shields.io/badge/MCP_Registry-active-2da44e)](https://registry.modelcontextprotocol.io)
 
-> **Static security scanner for MCP servers, AI agent skills, and plugins.** 17 attack patterns (59 regex signatures) across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
+> **Static security scanner for MCP servers, AI agent skills, and plugins.** 17 attack patterns (65 regex signatures) across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
 
 [![Glama MCP server](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp/badges/score.svg)](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp)
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-v1-blue?logo=github)](https://github.com/eltociear/skill-audit-mcp)
@@ -77,31 +77,27 @@ With SARIF upload (shows findings in GitHub Security tab):
           sarif_file: 'results.sarif'
 ```
 
-## 2. CLI (npx)
+## 2. CLI
+
+Standard-library Python 3.8+, nothing to install. (Not on npm yet — earlier versions of this README
+said `npx @eltociear/skill-audit-mcp`, which never resolved.)
 
 ```bash
-# Scan a file
-npx @eltociear/skill-audit-mcp --path ./server.py
+git clone --depth 1 --branch v1.2.0 https://github.com/eltociear/skill-audit-mcp
+cd skill-audit-mcp
 
-# Scan a directory
-npx @eltociear/skill-audit-mcp --path ./mcp-servers/
-
-# JSON output
-npx @eltociear/skill-audit-mcp --path . --json
-
-# SARIF output
-npx @eltociear/skill-audit-mcp --path . --sarif results.sarif
-
-# Fail if HIGH or CRITICAL findings
-npx @eltociear/skill-audit-mcp --path . --fail-on HIGH
+python3 cli.py --path ./server.py                  # scan a file
+python3 cli.py --path ./some-skill/                # scan a directory
+python3 cli.py --path . --json                     # JSON output
+python3 cli.py --path . --sarif results.sarif      # SARIF output
+python3 cli.py --path . --fail-on HIGH             # exit 1 on HIGH or CRITICAL
 ```
 
-Or install globally:
-
-```bash
-npm install -g @eltociear/skill-audit-mcp
-mcp-audit --path ./server.py
-```
+Findings are labelled by where they live. `production` decides the exit code; `documentation` and
+`test` are reported but do not fail the scan unless you pass `--include-nonproduction`. Files an
+agent reads as instructions — `SKILL.md`, `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, anything under
+`.claude/commands|agents|skills/` or `.cursor/rules/` — count as **production**: for a skill they
+are the program, not notes about it.
 
 ## 3. MCP Server (Claude Desktop / Cursor)
 
@@ -123,18 +119,16 @@ Then ask Claude: "Audit this MCP server for security issues"
 
 | Severity | Patterns |
 |----------|----------|
-| CRITICAL | Download & execute, credential exfiltration, key generation, sensitive directory write, seed phrase harvesting |
-| HIGH | External downloads, skill installation, arbitrary code execution, auth bypass, identity impersonation |
-| MEDIUM | Unknown API calls, data collection, privilege escalation, obfuscation, prompt injection |
-| LOW | External URL references, broad filesystem access |
+| CRITICAL | Download & execute (incl. `base64 -d \| sh`), credential exfiltration (incl. a secret file handed to `curl`/`nc`), key generation, sensitive directory write, seed phrase harvesting |
+| HIGH | Arbitrary code execution with dynamic input, auth bypass, identity impersonation, prompt injection |
+| MEDIUM | Privilege escalation (world-writable modes, elevated-access requests), obfuscation |
+| INFO | External downloads, skill installation, unknown API calls, data collection, external URLs, broad filesystem access — reported as context, never scored |
 
 ## Risk scoring
 
-- 0-10: SAFE
-- 11-25: LOW
-- 26-50: MEDIUM
-- 51-75: HIGH
-- 76-100: CRITICAL
+The level is the **highest-severity finding** present — one credential exfiltration is CRITICAL no
+matter how clean the rest is. The 0-100 score is magnitude only. Findings on comment lines, in
+pattern literals and in markdown tables are reported but demoted when they need execution to do harm.
 
 ## Sister project — secrets-audit-mcp
 
@@ -189,7 +183,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/eltociear/skill-audit-mcp
-    rev: v1.0.1
+    rev: v1.2.0
     hooks:
       - id: skill-audit-mcp
 ```
@@ -205,7 +199,7 @@ Need a deeper review than the automated scanner can give? I take freelance
 | Standard    | **$2,000**  | Manual review + PoC for HIGH/CRITICAL findings + remediation PR |
 | Engagement  | **$5,000+** | Pentest, threat model, retest after fixes, 30-day Slack support |
 
-Track record: 196 public MCP servers scanned end-to-end; 194 clean, 2 surfaced findings for review, false-positive rate driven 14.8% -> 1.0% first ([method and results](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md))
+Track record: the entry files of 196 public MCP servers scanned; 194 clean, 2 surfaced findings for review, false-positive rate driven 14.8% -> 1.0% first. A whole-repository scan flags far more (18% of 109 registry servers sampled 2026-09-29), mostly documented installers and tool code that a human should glance at ([method and results](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md))
 (reports prepared for bytebase/dbhub, mysql_mcp_server, applescript-mcp,
 docker-mcp).
 
