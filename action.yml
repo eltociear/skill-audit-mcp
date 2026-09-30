@@ -1,5 +1,5 @@
 name: 'MCP Security Audit'
-description: 'Scan MCP servers, AI agent skills, and plugins for 68+ malicious patterns'
+description: 'Scan MCP servers, AI agent skills, and plugins for 17 attack patterns (65 signatures)'
 author: 'eltociear'
 branding:
   icon: 'shield'

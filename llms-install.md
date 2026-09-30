@@ -4,14 +4,16 @@ This file gives LLM-driven coding agents (Cline, Goose, Cursor, Claude Code) exp
 
 ## What this server does
 
-Static security scanner. Scans MCP server code, AI agent skill files, and plugins for **68 attack patterns** across 4 severity levels:
+Static security scanner. Scans MCP server code, AI agent skill files, and plugins for **17 attack patterns (65 signatures)** across 4 severity levels:
 
-- **CRITICAL** — credential exfiltration, seed-phrase harvest, download-and-execute
-- **HIGH** — arbitrary code execution, auth bypass, identity impersonation
-- **MEDIUM** — prompt injection, obfuscation, privilege escalation
-- **LOW** — external URL references, broad filesystem access
+- **CRITICAL** — credential exfiltration, seed-phrase harvest, download-and-execute, key generation, sensitive directory write
+- **HIGH** — arbitrary code execution with dynamic input, auth bypass, identity impersonation, prompt injection
+- **MEDIUM** — obfuscation, privilege escalation
+- **INFO** (reported, never scored) — external URLs and downloads, broad filesystem access, skill installation, unknown APIs, data collection
 
-Output: structured JSON findings (severity, line numbers, CWE references) or SARIF 2.1.0 for GitHub Code Scanning.
+`SKILL.md`, `AGENTS.md`, `CLAUDE.md`, `.cursorrules` and `.claude/` command files count as code, not documentation: for a skill they are what the agent runs.
+
+Output: structured JSON findings (severity, pattern id, file, line, file context) or SARIF 2.1.0 for GitHub Code Scanning.
 
 ## Quick install (preferred path)
 
