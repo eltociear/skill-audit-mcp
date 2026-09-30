@@ -49,4 +49,4 @@ We do not currently run a paid bug bounty program. We do credit reporters in rel
 ## Related
 
 - **Found vulnerabilities in OTHER MCP servers using skill-audit-mcp?** Report them via [huntr.com](https://huntr.com) (MCP servers are in scope) or directly to the affected repo's security policy.
-- **Need an audit of your own MCP server / skill files?** Use the hosted x402 API: `POST https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit` with `{content}` or `{url}` body. $0.01 USDC per scan, free tier 1,000 scans/month.
+- **Need an audit of your own MCP server / skill files?** Use the hosted x402 API: `POST https://eltociear-skill-audit.hf.space/audit` with `{content}` or `{url}` body. $0.01 USDC per scan; a `GET` on the same path returns the price.

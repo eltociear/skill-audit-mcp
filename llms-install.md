@@ -91,7 +91,7 @@ You should see a JSON report with `findings` and `summary` keys.
 ## Also available as
 
 - **GitHub Action**: `uses: eltociear/skill-audit-mcp@v1` — drop-in CI/CD scanner
-- **Hosted x402 API**: `https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit` — pay-per-scan via USDC micropayments
+- **Hosted x402 API**: `https://eltociear-skill-audit.hf.space/audit` — pay-per-scan via USDC micropayments
 - **Glama listing**: https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp
 
 ## License

