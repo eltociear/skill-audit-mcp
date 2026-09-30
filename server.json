@@ -6,11 +6,11 @@
     "url": "https://github.com/eltociear/skill-audit-mcp",
     "source": "github"
   },
-  "version": "1.1.0",
+  "version": "1.2.0",
   "packages": [
     {
       "registryType": "oci",
-      "identifier": "ghcr.io/eltociear/skill-audit-mcp:mcp-1.0.2",
+      "identifier": "ghcr.io/eltociear/skill-audit-mcp:mcp-1.2.0",
       "transport": {
         "type": "stdio"
       }

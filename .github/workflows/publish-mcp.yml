@@ -16,7 +16,7 @@ jobs:
       packages: write   # push image to ghcr.io
       id-token: write   # GitHub OIDC for mcp-publisher
     env:
-      VERSION: "1.0.2"
+      VERSION: "1.2.0"
       IMAGE: ghcr.io/${{ github.repository_owner }}/skill-audit-mcp
     steps:
       - uses: actions/checkout@v4
