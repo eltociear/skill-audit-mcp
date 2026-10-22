@@ -1,6 +1,6 @@
 # skill-audit-mcp
 
-[![smithery badge](https://smithery.ai/badge/eltociear/skill-audit-mcp)](https://smithery.ai/server/eltociear/skill-audit-mcp) [![MCP Registry](https://img.shields.io/badge/MCP_Registry-active-2da44e)](https://registry.modelcontextprotocol.io)
+[![LightNow capabilities](https://lightnow.ai/badge/io.github.eltociear/skill-audit-mcp)](https://lightnow.ai/servers/io.github.eltociear/skill-audit-mcp) [![MCP Registry](https://img.shields.io/badge/MCP_Registry-active-2da44e)](https://registry.modelcontextprotocol.io)
 
 > **Static security scanner for MCP servers, AI agent skills, and plugins.** 17 attack patterns (65 regex signatures) across 4 severity levels. SARIF output → GitHub Code Scanning. Ships as a CLI, GitHub Action, multi-arch Docker image, MCP server, and hosted x402 API.
 
