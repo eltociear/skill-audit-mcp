@@ -6,7 +6,7 @@
     "url": "https://github.com/eltociear/skill-audit-mcp",
     "source": "github"
   },
-  "version": "1.2.0",
+  "version": "1.2.1",
   "packages": [
     {
       "registryType": "oci",
@@ -20,6 +20,17 @@
     {
       "type": "streamable-http",
       "url": "https://eltociear-skill-audit.hf.space/mcp"
+    }
+  ],
+  "title": "Skill Audit — Security Scanner for MCP Servers & Agent Skills",
+  "websiteUrl": "https://github.com/eltociear/skill-audit-mcp",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/eltociear/skill-audit-mcp/main/assets/logo.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "400x400"
+      ]
     }
   ]
 }
