@@ -9,7 +9,7 @@
 [![Docker](https://img.shields.io/badge/ghcr.io-v1-2496ed?logo=docker)](https://github.com/eltociear/skill-audit-mcp/pkgs/container/skill-audit-mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Attack patterns](https://img.shields.io/badge/attack%20patterns-17-red)](https://github.com/eltociear/skill-audit-mcp)
-[![Scanned](https://img.shields.io/badge/MCP%20servers%20scanned-196-blue)](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md)
+[![Scanned](https://img.shields.io/badge/MCP%20servers%20scanned-1060-blue)](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md)
 
 ## ⚡ Try it in 30 seconds
 
@@ -199,7 +199,7 @@ Need a deeper review than the automated scanner can give? I take freelance
 | Standard    | **$2,000**  | Manual review + PoC for HIGH/CRITICAL findings + remediation PR |
 | Engagement  | **$5,000+** | Pentest, threat model, retest after fixes, 30-day Slack support |
 
-Track record: the entry files of 196 public MCP servers scanned; 194 clean, 2 surfaced findings for review, false-positive rate driven 14.8% -> 1.0% first. A whole-repository scan flags far more (18% of 109 registry servers sampled 2026-09-29), mostly documented installers and tool code that a human should glance at ([method and results](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md))
+Track record: the entry files of 196 public MCP servers scanned; 194 clean, 2 surfaced findings for review, false-positive rate driven 14.8% -> 1.0% first. The 2026-11 mcp-audit rescan covered 1,060 registry servers: 98.96% clean, 0.57% HIGH/CRITICAL false positives, no malicious servers. A whole-repository scan flags far more (18% of 109 registry servers sampled 2026-09-29), mostly documented installers and tool code that a human should glance at ([method and results](https://github.com/eltociear/mcp-audit/blob/main/FINDINGS.md))
 (reports prepared for bytebase/dbhub, mysql_mcp_server, applescript-mcp,
 docker-mcp).
 
